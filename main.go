@@ -24,7 +24,12 @@ func main() {
 	}
 
 	for _, host := range flag.Args() {
-		fmt.Println("TODO check:", host)
+		r := check(host)
+		if r.Error != "" {
+			fmt.Printf("%s\tERR\t%s\n", r.Host, r.Error)
+			continue
+		}
+		fmt.Printf("%s\t%s\n", r.Host, r.NotAfter.Format("2006-01-02"))
 	}
 }
 
