@@ -29,7 +29,7 @@ func main() {
 			fmt.Printf("%s\tERR\t%s\n", r.Host, r.Error)
 			continue
 		}
-		fmt.Printf("%s\t%s\n", r.Host, r.NotAfter.Format("2006-01-02"))
+		fmt.Printf("%s\t%s\t%dd\t%s\n", r.Host, r.NotAfter.Format("2006-01-02"), r.DaysLeft, r.Issuer)
 	}
 }
 

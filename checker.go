@@ -2,6 +2,8 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -11,6 +13,9 @@ const defaultTimeout = 5 * time.Second
 type Result struct {
 	Host     string
 	NotAfter time.Time
+	DaysLeft int
+	Issuer   string
+	Subject  string
 	Error    string
 }
 
@@ -19,6 +24,16 @@ func parseHost(h string) string {
 		return h + ":443"
 	}
 	return h
+}
+
+func issuerCN(c *x509.Certificate) string {
+	if c.Issuer.CommonName != "" {
+		return c.Issuer.CommonName
+	}
+	if len(c.Issuer.Organization) > 0 {
+		return c.Issuer.Organization[0]
+	}
+	return fmt.Sprint(c.Issuer)
 }
 
 func check(host string) Result {
@@ -35,6 +50,10 @@ func check(host string) Result {
 		r.Error = "no peer certificates"
 		return r
 	}
-	r.NotAfter = certs[0].NotAfter
+	leaf := certs[0]
+	r.NotAfter = leaf.NotAfter
+	r.DaysLeft = int(time.Until(leaf.NotAfter).Hours() / 24)
+	r.Issuer = issuerCN(leaf)
+	r.Subject = leaf.Subject.CommonName
 	return r
 }
