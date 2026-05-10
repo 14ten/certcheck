@@ -9,7 +9,11 @@ import (
 var version = "0.2.0"
 
 func main() {
-	showVer := flag.Bool("version", false, "print version and exit")
+	var (
+		warnDays = flag.Int("warn-days", 30, "warn when cert expires within N days")
+		critDays = flag.Int("crit-days", 7, "critical when cert expires within N days")
+		showVer  = flag.Bool("version", false, "print version and exit")
+	)
 	flag.Usage = usage
 	flag.Parse()
 
@@ -27,7 +31,7 @@ func main() {
 	for _, host := range flag.Args() {
 		results = append(results, check(host))
 	}
-	writeTable(os.Stdout, results)
+	writeTable(os.Stdout, results, *warnDays, *critDays)
 }
 
 func usage() {
