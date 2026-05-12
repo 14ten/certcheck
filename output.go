@@ -1,10 +1,17 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"text/tabwriter"
 )
+
+func writeJSON(w io.Writer, results []Result) error {
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(results)
+}
 
 func status(r Result, warn, crit int) string {
 	if r.Error != "" {

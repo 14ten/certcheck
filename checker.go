@@ -11,12 +11,12 @@ import (
 const defaultTimeout = 5 * time.Second
 
 type Result struct {
-	Host     string
-	NotAfter time.Time
-	DaysLeft int
-	Issuer   string
-	Subject  string
-	Error    string
+	Host     string    `json:"host"`
+	NotAfter time.Time `json:"not_after,omitempty"`
+	DaysLeft int       `json:"days_left,omitempty"`
+	Issuer   string    `json:"issuer,omitempty"`
+	Subject  string    `json:"subject,omitempty"`
+	Error    string    `json:"error,omitempty"`
 }
 
 func parseHost(h string) string {
