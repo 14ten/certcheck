@@ -6,13 +6,15 @@ import (
 	"os"
 )
 
-var version = "0.2.0"
+var version = "0.3.0"
 
 func main() {
 	var (
 		warnDays = flag.Int("warn-days", 30, "warn when cert expires within N days")
 		critDays = flag.Int("crit-days", 7, "critical when cert expires within N days")
 		jsonOut  = flag.Bool("json", false, "emit JSON instead of a table")
+		workers  = flag.Int("workers", 8, "concurrent checks")
+		timeout  = flag.Duration("timeout", defaultTimeout, "per-host TLS dial timeout")
 		showVer  = flag.Bool("version", false, "print version and exit")
 	)
 	flag.Usage = usage
@@ -28,10 +30,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	results := make([]Result, 0, flag.NArg())
-	for _, host := range flag.Args() {
-		results = append(results, check(host))
-	}
+	results := checkAll(flag.Args(), *workers, *timeout)
 	if *jsonOut {
 		_ = writeJSON(os.Stdout, results)
 	} else {

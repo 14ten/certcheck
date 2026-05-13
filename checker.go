@@ -4,7 +4,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"net"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -36,9 +38,10 @@ func issuerCN(c *x509.Certificate) string {
 	return fmt.Sprint(c.Issuer)
 }
 
-func check(host string) Result {
+func check(host string, timeout time.Duration) Result {
 	r := Result{Host: host}
-	conn, err := tls.Dial("tcp", parseHost(host), &tls.Config{InsecureSkipVerify: true})
+	dialer := &net.Dialer{Timeout: timeout}
+	conn, err := tls.DialWithDialer(dialer, "tcp", parseHost(host), &tls.Config{InsecureSkipVerify: true})
 	if err != nil {
 		r.Error = err.Error()
 		return r
@@ -56,4 +59,28 @@ func check(host string) Result {
 	r.Issuer = issuerCN(leaf)
 	r.Subject = leaf.Subject.CommonName
 	return r
+}
+
+func checkAll(hosts []string, workers int, timeout time.Duration) []Result {
+	if workers < 1 {
+		workers = 1
+	}
+	results := make([]Result, len(hosts))
+	jobs := make(chan int, len(hosts))
+	var wg sync.WaitGroup
+	for w := 0; w < workers; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := range jobs {
+				results[i] = check(hosts[i], timeout)
+			}
+		}()
+	}
+	for i := range hosts {
+		jobs <- i
+	}
+	close(jobs)
+	wg.Wait()
+	return results
 }
