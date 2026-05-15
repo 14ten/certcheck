@@ -25,12 +25,19 @@ func main() {
 		return
 	}
 
-	if flag.NArg() == 0 {
+	hosts := flag.Args()
+	if len(hosts) == 0 {
+		stat, _ := os.Stdin.Stat()
+		if (stat.Mode() & os.ModeCharDevice) == 0 {
+			hosts = readHostList(os.Stdin)
+		}
+	}
+	if len(hosts) == 0 {
 		usage()
 		os.Exit(2)
 	}
 
-	results := checkAll(flag.Args(), *workers, *timeout)
+	results := checkAll(hosts, *workers, *timeout)
 	if *jsonOut {
 		_ = writeJSON(os.Stdout, results)
 	} else {
