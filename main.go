@@ -43,6 +43,7 @@ func main() {
 	} else {
 		writeTable(os.Stdout, results, *warnDays, *critDays)
 	}
+	os.Exit(exitCode(results, *warnDays, *critDays))
 }
 
 func usage() {

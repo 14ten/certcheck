@@ -13,6 +13,28 @@ func writeJSON(w io.Writer, results []Result) error {
 	return enc.Encode(results)
 }
 
+// exitCode returns 0 (ok), 1 (warn), 2 (crit), or 3 (error).
+func exitCode(results []Result, warn, crit int) int {
+	code := 0
+	for _, r := range results {
+		switch {
+		case r.Error != "":
+			if code < 3 {
+				code = 3
+			}
+		case r.DaysLeft <= crit:
+			if code < 2 {
+				code = 2
+			}
+		case r.DaysLeft <= warn:
+			if code < 1 {
+				code = 1
+			}
+		}
+	}
+	return code
+}
+
 func status(r Result, warn, crit int) string {
 	if r.Error != "" {
 		return "ERR"
