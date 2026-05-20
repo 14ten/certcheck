@@ -28,6 +28,21 @@ func parseHost(h string) string {
 	return h
 }
 
+func friendlyErr(err error) string {
+	msg := err.Error()
+	switch {
+	case strings.Contains(msg, "i/o timeout"):
+		return "timeout"
+	case strings.Contains(msg, "no such host"):
+		return "dns: no such host"
+	case strings.Contains(msg, "connection refused"):
+		return "connection refused"
+	case strings.Contains(msg, "tls: handshake failure"):
+		return "tls handshake failed"
+	}
+	return msg
+}
+
 func issuerCN(c *x509.Certificate) string {
 	if c.Issuer.CommonName != "" {
 		return c.Issuer.CommonName
@@ -43,7 +58,7 @@ func check(host string, timeout time.Duration) Result {
 	dialer := &net.Dialer{Timeout: timeout}
 	conn, err := tls.DialWithDialer(dialer, "tcp", parseHost(host), &tls.Config{InsecureSkipVerify: true})
 	if err != nil {
-		r.Error = err.Error()
+		r.Error = friendlyErr(err)
 		return r
 	}
 	defer conn.Close()
