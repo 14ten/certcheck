@@ -53,19 +53,26 @@ func issuerCN(c *x509.Certificate) string {
 	return fmt.Sprint(c.Issuer)
 }
 
-func check(host string, timeout time.Duration) Result {
-	return checkWith(host, timeout, "")
+// Options controls how a check is performed.
+type Options struct {
+	Timeout  time.Duration
+	SNI      string
+	Insecure bool // skip certificate chain verification
 }
 
-// checkWith allows overriding the SNI server name sent in the handshake.
-func checkWith(host string, timeout time.Duration, sni string) Result {
+func check(host string, timeout time.Duration) Result {
+	return checkWith(host, Options{Timeout: timeout, Insecure: true})
+}
+
+// checkWith performs a TLS dial with the supplied options.
+func checkWith(host string, opts Options) Result {
 	r := Result{Host: host}
 	addr := parseHost(host)
-	cfg := &tls.Config{InsecureSkipVerify: true}
-	if sni != "" {
-		cfg.ServerName = sni
+	cfg := &tls.Config{InsecureSkipVerify: opts.Insecure}
+	if opts.SNI != "" {
+		cfg.ServerName = opts.SNI
 	}
-	dialer := &net.Dialer{Timeout: timeout}
+	dialer := &net.Dialer{Timeout: opts.Timeout}
 	conn, err := tls.DialWithDialer(dialer, "tcp", addr, cfg)
 	if err != nil {
 		r.Error = friendlyErr(err)
@@ -86,7 +93,7 @@ func checkWith(host string, timeout time.Duration, sni string) Result {
 	return r
 }
 
-func checkAll(hosts []string, workers int, timeout time.Duration, sni string) []Result {
+func checkAll(hosts []string, workers int, opts Options) []Result {
 	if workers < 1 {
 		workers = 1
 	}
@@ -98,7 +105,7 @@ func checkAll(hosts []string, workers int, timeout time.Duration, sni string) []
 		go func() {
 			defer wg.Done()
 			for i := range jobs {
-				results[i] = checkWith(hosts[i], timeout, sni)
+				results[i] = checkWith(hosts[i], opts)
 			}
 		}()
 	}

@@ -17,6 +17,7 @@ func main() {
 		workers  = flag.Int("workers", 8, "concurrent checks")
 		timeout  = flag.Duration("timeout", defaultTimeout, "per-host TLS dial timeout")
 		sni      = flag.String("sni", "", "override SNI server name (default: host)")
+		insecure = flag.Bool("insecure", true, "skip cert chain verification (still reads expiry)")
 		noColor  = flag.Bool("no-color", false, "disable ANSI colors")
 		showVer  = flag.Bool("version", false, "print version and exit")
 	)
@@ -40,7 +41,11 @@ func main() {
 		os.Exit(2)
 	}
 
-	results := checkAll(hosts, *workers, *timeout, *sni)
+	results := checkAll(hosts, *workers, Options{
+		Timeout:  *timeout,
+		SNI:      *sni,
+		Insecure: *insecure,
+	})
 	sortByExpiry(results)
 	switch {
 	case *quiet:
