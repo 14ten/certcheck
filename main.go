@@ -12,12 +12,15 @@ func main() {
 		warnDays = flag.Int("warn-days", 30, "warn when cert expires within N days")
 		critDays = flag.Int("crit-days", 7, "critical when cert expires within N days")
 		jsonOut  = flag.Bool("json", false, "emit JSON instead of a table")
+		csvOut   = flag.Bool("csv", false, "emit CSV instead of a table")
 		quiet    = flag.Bool("quiet", false, "suppress output, exit code only")
 		workers  = flag.Int("workers", 8, "concurrent checks")
 		timeout  = flag.Duration("timeout", defaultTimeout, "per-host TLS dial timeout")
+		port     = flag.Int("port", 443, "default TLS port when not specified per host")
 		sni      = flag.String("sni", "", "override SNI server name (default: host)")
 		insecure  = flag.Bool("insecure", true, "skip cert chain verification (still reads expiry)")
 		showChain = flag.Bool("chain", false, "include full certificate chain in JSON output")
+		subject   = flag.Bool("show-subject", false, "show certificate subject CN column")
 		verbose   = flag.Bool("v", false, "verbose: log each host as it's checked")
 		noColor  = flag.Bool("no-color", false, "disable ANSI colors")
 		showVer  = flag.Bool("version", false, "print version and exit")
@@ -48,10 +51,12 @@ func main() {
 		log.Printf("checking %d host(s) with %d worker(s), timeout=%s", len(hosts), *workers, *timeout)
 	}
 	results := checkAll(hosts, *workers, Options{
-		Timeout:   *timeout,
-		SNI:       *sni,
-		Insecure:  *insecure,
-		ShowChain: *showChain,
+		Timeout:     *timeout,
+		SNI:         *sni,
+		Insecure:    *insecure,
+		ShowChain:   *showChain,
+		Verbose:     *verbose,
+		DefaultPort: *port,
 	})
 	if *verbose {
 		log.Printf("done, %d result(s)", len(results))
@@ -62,8 +67,10 @@ func main() {
 		// no output
 	case *jsonOut:
 		_ = writeJSON(os.Stdout, results)
+	case *csvOut:
+		_ = writeCSV(os.Stdout, results, *warnDays, *critDays)
 	default:
-		writeTable(os.Stdout, results, *warnDays, *critDays, !*noColor && defaultColorEnabled())
+		writeTable(os.Stdout, results, *warnDays, *critDays, !*noColor && defaultColorEnabled(), *subject)
 	}
 	os.Exit(exitCode(results, *warnDays, *critDays))
 }
