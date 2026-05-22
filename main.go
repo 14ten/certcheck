@@ -12,6 +12,7 @@ func main() {
 		warnDays = flag.Int("warn-days", 30, "warn when cert expires within N days")
 		critDays = flag.Int("crit-days", 7, "critical when cert expires within N days")
 		jsonOut  = flag.Bool("json", false, "emit JSON instead of a table")
+		csvOut   = flag.Bool("csv", false, "emit CSV instead of a table")
 		quiet    = flag.Bool("quiet", false, "suppress output, exit code only")
 		workers  = flag.Int("workers", 8, "concurrent checks")
 		timeout  = flag.Duration("timeout", defaultTimeout, "per-host TLS dial timeout")
@@ -60,6 +61,8 @@ func main() {
 		// no output
 	case *jsonOut:
 		_ = writeJSON(os.Stdout, results)
+	case *csvOut:
+		_ = writeCSV(os.Stdout, results, *warnDays, *critDays)
 	default:
 		writeTable(os.Stdout, results, *warnDays, *critDays, !*noColor && defaultColorEnabled())
 	}

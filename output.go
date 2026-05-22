@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
+	"strconv"
 	"text/tabwriter"
 )
 
@@ -58,6 +60,21 @@ func status(r Result, warn, crit int) string {
 	default:
 		return "OK"
 	}
+}
+
+func writeCSV(w io.Writer, results []Result, warn, crit int) error {
+	cw := csv.NewWriter(w)
+	cw.Write([]string{"host", "expires", "days_left", "status", "issuer", "error"})
+	for _, r := range results {
+		s := status(r, warn, crit)
+		expires := ""
+		if r.Error == "" {
+			expires = r.NotAfter.Format("2006-01-02")
+		}
+		cw.Write([]string{r.Host, expires, strconv.Itoa(r.DaysLeft), s, r.Issuer, r.Error})
+	}
+	cw.Flush()
+	return cw.Error()
 }
 
 func writeTable(w io.Writer, results []Result, warn, crit int, color bool) {
