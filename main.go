@@ -51,6 +51,7 @@ func main() {
 		Timeout:     *timeout,
 		SNI:         *sni,
 		Insecure:    *insecure,
+		Verbose:     *verbose,
 		DefaultPort: *port,
 	})
 	if *verbose {
