@@ -16,6 +16,7 @@ func main() {
 		quiet    = flag.Bool("quiet", false, "suppress output, exit code only")
 		workers  = flag.Int("workers", 8, "concurrent checks")
 		timeout  = flag.Duration("timeout", defaultTimeout, "per-host TLS dial timeout")
+		sni      = flag.String("sni", "", "override SNI server name (default: host)")
 		showVer  = flag.Bool("version", false, "print version and exit")
 	)
 	flag.Usage = usage
@@ -38,7 +39,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	results := checkAll(hosts, *workers, *timeout)
+	results := checkAll(hosts, *workers, *timeout, *sni)
 	sortByExpiry(results)
 	switch {
 	case *quiet:
