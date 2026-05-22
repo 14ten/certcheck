@@ -4,8 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 	"text/tabwriter"
 )
+
+// sortByExpiry orders results so the most urgent (least days, errors first) come first.
+func sortByExpiry(results []Result) {
+	sort.SliceStable(results, func(i, j int) bool {
+		if (results[i].Error != "") != (results[j].Error != "") {
+			return results[i].Error != ""
+		}
+		return results[i].DaysLeft < results[j].DaysLeft
+	})
+}
 
 func writeJSON(w io.Writer, results []Result) error {
 	enc := json.NewEncoder(w)
