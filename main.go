@@ -17,6 +17,7 @@ func main() {
 		workers  = flag.Int("workers", 8, "concurrent checks")
 		timeout  = flag.Duration("timeout", defaultTimeout, "per-host TLS dial timeout")
 		sni      = flag.String("sni", "", "override SNI server name (default: host)")
+		noColor  = flag.Bool("no-color", false, "disable ANSI colors")
 		showVer  = flag.Bool("version", false, "print version and exit")
 	)
 	flag.Usage = usage
@@ -47,7 +48,7 @@ func main() {
 	case *jsonOut:
 		_ = writeJSON(os.Stdout, results)
 	default:
-		writeTable(os.Stdout, results, *warnDays, *critDays)
+		writeTable(os.Stdout, results, *warnDays, *critDays, !*noColor && defaultColorEnabled())
 	}
 	os.Exit(exitCode(results, *warnDays, *critDays))
 }
