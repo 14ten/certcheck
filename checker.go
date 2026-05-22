@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"log"
 	"net"
 	"strings"
 	"sync"
@@ -21,9 +22,9 @@ type Result struct {
 	Error    string    `json:"error,omitempty"`
 }
 
-func parseHost(h string) string {
+func parseHost(h string, defaultPort int) string {
 	if !strings.Contains(h, ":") {
-		return h + ":443"
+		return fmt.Sprintf("%s:%d", h, defaultPort)
 	}
 	return h
 }
@@ -55,19 +56,25 @@ func issuerCN(c *x509.Certificate) string {
 
 // Options controls how a check is performed.
 type Options struct {
-	Timeout  time.Duration
-	SNI      string
-	Insecure bool // skip certificate chain verification
+	Timeout     time.Duration
+	SNI         string
+	Insecure    bool
+	Verbose     bool
+	DefaultPort int
 }
 
 func check(host string, timeout time.Duration) Result {
-	return checkWith(host, Options{Timeout: timeout, Insecure: true})
+	return checkWith(host, Options{Timeout: timeout, Insecure: true, DefaultPort: 443})
 }
 
 // checkWith performs a TLS dial with the supplied options.
 func checkWith(host string, opts Options) Result {
 	r := Result{Host: host}
-	addr := parseHost(host)
+	port := opts.DefaultPort
+	if port == 0 {
+		port = 443
+	}
+	addr := parseHost(host, port)
 	cfg := &tls.Config{InsecureSkipVerify: opts.Insecure}
 	if opts.SNI != "" {
 		cfg.ServerName = opts.SNI
@@ -105,7 +112,16 @@ func checkAll(hosts []string, workers int, opts Options) []Result {
 		go func() {
 			defer wg.Done()
 			for i := range jobs {
+				start := time.Now()
 				results[i] = checkWith(hosts[i], opts)
+				if opts.Verbose {
+					elapsed := time.Since(start)
+					if results[i].Error != "" {
+						log.Printf("  %s  err=%s  (%s)", hosts[i], results[i].Error, elapsed.Truncate(time.Millisecond))
+					} else {
+						log.Printf("  %s  days_left=%d  (%s)", hosts[i], results[i].DaysLeft, elapsed.Truncate(time.Millisecond))
+					}
+				}
 			}
 		}()
 	}

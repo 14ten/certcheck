@@ -77,18 +77,31 @@ func writeCSV(w io.Writer, results []Result, warn, crit int) error {
 	return cw.Error()
 }
 
-func writeTable(w io.Writer, results []Result, warn, crit int, color bool) {
+func writeTable(w io.Writer, results []Result, warn, crit int, color bool, showSubject bool) {
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(tw, "HOST\tEXPIRES\tDAYS\tSTATUS\tISSUER")
+	if showSubject {
+		fmt.Fprintln(tw, "HOST\tSUBJECT\tEXPIRES\tDAYS\tSTATUS\tISSUER")
+	} else {
+		fmt.Fprintln(tw, "HOST\tEXPIRES\tDAYS\tSTATUS\tISSUER")
+	}
 	for _, r := range results {
 		s := status(r, warn, crit)
 		sc := colorize(s, statusColor(s), color)
 		if r.Error != "" {
-			fmt.Fprintf(tw, "%s\t-\t-\t%s\t%s\n", r.Host, sc, r.Error)
+			if showSubject {
+				fmt.Fprintf(tw, "%s\t-\t-\t-\t%s\t%s\n", r.Host, sc, r.Error)
+			} else {
+				fmt.Fprintf(tw, "%s\t-\t-\t%s\t%s\n", r.Host, sc, r.Error)
+			}
 			continue
 		}
-		fmt.Fprintf(tw, "%s\t%s\t%d\t%s\t%s\n",
-			r.Host, r.NotAfter.Format("2006-01-02"), r.DaysLeft, sc, r.Issuer)
+		if showSubject {
+			fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t%s\t%s\n",
+				r.Host, r.Subject, r.NotAfter.Format("2006-01-02"), r.DaysLeft, sc, r.Issuer)
+		} else {
+			fmt.Fprintf(tw, "%s\t%s\t%d\t%s\t%s\n",
+				r.Host, r.NotAfter.Format("2006-01-02"), r.DaysLeft, sc, r.Issuer)
+		}
 	}
 	tw.Flush()
 }
