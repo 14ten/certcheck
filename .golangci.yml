@@ -1,0 +1,26 @@
+run:
+  timeout: 2m
+
+linters:
+  enable:
+    - errcheck
+    - gofmt
+    - goimports
+    - govet
+    - ineffassign
+    - misspell
+    - revive
+    - staticcheck
+    - unused
+
+linters-settings:
+  revive:
+    rules:
+      - name: exported
+        disabled: true
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
