@@ -22,9 +22,9 @@ type Result struct {
 	Error    string    `json:"error,omitempty"`
 }
 
-func parseHost(h string) string {
+func parseHost(h string, defaultPort int) string {
 	if !strings.Contains(h, ":") {
-		return h + ":443"
+		return fmt.Sprintf("%s:%d", h, defaultPort)
 	}
 	return h
 }
@@ -56,20 +56,25 @@ func issuerCN(c *x509.Certificate) string {
 
 // Options controls how a check is performed.
 type Options struct {
-	Timeout  time.Duration
-	SNI      string
-	Insecure bool
-	Verbose  bool
+	Timeout     time.Duration
+	SNI         string
+	Insecure    bool
+	Verbose     bool
+	DefaultPort int
 }
 
 func check(host string, timeout time.Duration) Result {
-	return checkWith(host, Options{Timeout: timeout, Insecure: true})
+	return checkWith(host, Options{Timeout: timeout, Insecure: true, DefaultPort: 443})
 }
 
 // checkWith performs a TLS dial with the supplied options.
 func checkWith(host string, opts Options) Result {
 	r := Result{Host: host}
-	addr := parseHost(host)
+	port := opts.DefaultPort
+	if port == 0 {
+		port = 443
+	}
+	addr := parseHost(host, port)
 	cfg := &tls.Config{InsecureSkipVerify: opts.Insecure}
 	if opts.SNI != "" {
 		cfg.ServerName = opts.SNI
