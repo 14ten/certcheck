@@ -13,6 +13,7 @@ func main() {
 		warnDays = flag.Int("warn-days", 30, "warn when cert expires within N days")
 		critDays = flag.Int("crit-days", 7, "critical when cert expires within N days")
 		jsonOut  = flag.Bool("json", false, "emit JSON instead of a table")
+		quiet    = flag.Bool("quiet", false, "suppress output, exit code only")
 		workers  = flag.Int("workers", 8, "concurrent checks")
 		timeout  = flag.Duration("timeout", defaultTimeout, "per-host TLS dial timeout")
 		showVer  = flag.Bool("version", false, "print version and exit")
@@ -38,9 +39,12 @@ func main() {
 	}
 
 	results := checkAll(hosts, *workers, *timeout)
-	if *jsonOut {
+	switch {
+	case *quiet:
+		// no output
+	case *jsonOut:
 		_ = writeJSON(os.Stdout, results)
-	} else {
+	default:
 		writeTable(os.Stdout, results, *warnDays, *critDays)
 	}
 	os.Exit(exitCode(results, *warnDays, *critDays))
