@@ -6,8 +6,6 @@ import (
 	"os"
 )
 
-var version = "0.3.0"
-
 func main() {
 	var (
 		warnDays = flag.Int("warn-days", 30, "warn when cert expires within N days")
@@ -25,7 +23,7 @@ func main() {
 	flag.Parse()
 
 	if *showVer {
-		fmt.Println("certcheck", version)
+		fmt.Println(fullVersion())
 		return
 	}
 
