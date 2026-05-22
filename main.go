@@ -15,6 +15,7 @@ func main() {
 		quiet    = flag.Bool("quiet", false, "suppress output, exit code only")
 		workers  = flag.Int("workers", 8, "concurrent checks")
 		timeout  = flag.Duration("timeout", defaultTimeout, "per-host TLS dial timeout")
+		port     = flag.Int("port", 443, "default TLS port when not specified per host")
 		sni      = flag.String("sni", "", "override SNI server name (default: host)")
 		insecure = flag.Bool("insecure", true, "skip cert chain verification (still reads expiry)")
 		verbose  = flag.Bool("v", false, "verbose: log each host as it's checked")
@@ -47,9 +48,10 @@ func main() {
 		log.Printf("checking %d host(s) with %d worker(s), timeout=%s", len(hosts), *workers, *timeout)
 	}
 	results := checkAll(hosts, *workers, Options{
-		Timeout:  *timeout,
-		SNI:      *sni,
-		Insecure: *insecure,
+		Timeout:     *timeout,
+		SNI:         *sni,
+		Insecure:    *insecure,
+		DefaultPort: *port,
 	})
 	if *verbose {
 		log.Printf("done, %d result(s)", len(results))
