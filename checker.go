@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"log"
 	"net"
 	"strings"
 	"sync"
@@ -57,7 +58,8 @@ func issuerCN(c *x509.Certificate) string {
 type Options struct {
 	Timeout  time.Duration
 	SNI      string
-	Insecure bool // skip certificate chain verification
+	Insecure bool
+	Verbose  bool
 }
 
 func check(host string, timeout time.Duration) Result {
@@ -105,7 +107,16 @@ func checkAll(hosts []string, workers int, opts Options) []Result {
 		go func() {
 			defer wg.Done()
 			for i := range jobs {
+				start := time.Now()
 				results[i] = checkWith(hosts[i], opts)
+				if opts.Verbose {
+					elapsed := time.Since(start)
+					if results[i].Error != "" {
+						log.Printf("  %s  err=%s  (%s)", hosts[i], results[i].Error, elapsed.Truncate(time.Millisecond))
+					} else {
+						log.Printf("  %s  days_left=%d  (%s)", hosts[i], results[i].DaysLeft, elapsed.Truncate(time.Millisecond))
+					}
+				}
 			}
 		}()
 	}

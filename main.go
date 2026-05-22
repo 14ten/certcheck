@@ -50,6 +50,7 @@ func main() {
 		Timeout:  *timeout,
 		SNI:      *sni,
 		Insecure: *insecure,
+		Verbose:  *verbose,
 	})
 	if *verbose {
 		log.Printf("done, %d result(s)", len(results))
