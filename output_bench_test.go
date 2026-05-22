@@ -19,6 +19,6 @@ func BenchmarkWriteTable(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		writeTable(io.Discard, results, 30, 7, false)
+		writeTable(io.Discard, results, 30, 7, false, false)
 	}
 }

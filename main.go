@@ -18,6 +18,7 @@ func main() {
 		port     = flag.Int("port", 443, "default TLS port when not specified per host")
 		sni      = flag.String("sni", "", "override SNI server name (default: host)")
 		insecure = flag.Bool("insecure", true, "skip cert chain verification (still reads expiry)")
+		subject  = flag.Bool("show-subject", false, "show certificate subject CN column")
 		verbose  = flag.Bool("v", false, "verbose: log each host as it's checked")
 		noColor  = flag.Bool("no-color", false, "disable ANSI colors")
 		showVer  = flag.Bool("version", false, "print version and exit")
@@ -64,7 +65,7 @@ func main() {
 	case *jsonOut:
 		_ = writeJSON(os.Stdout, results)
 	default:
-		writeTable(os.Stdout, results, *warnDays, *critDays, !*noColor && defaultColorEnabled())
+		writeTable(os.Stdout, results, *warnDays, *critDays, !*noColor && defaultColorEnabled(), *subject)
 	}
 	os.Exit(exitCode(results, *warnDays, *critDays))
 }
