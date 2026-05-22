@@ -54,9 +54,19 @@ func issuerCN(c *x509.Certificate) string {
 }
 
 func check(host string, timeout time.Duration) Result {
+	return checkWith(host, timeout, "")
+}
+
+// checkWith allows overriding the SNI server name sent in the handshake.
+func checkWith(host string, timeout time.Duration, sni string) Result {
 	r := Result{Host: host}
+	addr := parseHost(host)
+	cfg := &tls.Config{InsecureSkipVerify: true}
+	if sni != "" {
+		cfg.ServerName = sni
+	}
 	dialer := &net.Dialer{Timeout: timeout}
-	conn, err := tls.DialWithDialer(dialer, "tcp", parseHost(host), &tls.Config{InsecureSkipVerify: true})
+	conn, err := tls.DialWithDialer(dialer, "tcp", addr, cfg)
 	if err != nil {
 		r.Error = friendlyErr(err)
 		return r
@@ -76,7 +86,7 @@ func check(host string, timeout time.Duration) Result {
 	return r
 }
 
-func checkAll(hosts []string, workers int, timeout time.Duration) []Result {
+func checkAll(hosts []string, workers int, timeout time.Duration, sni string) []Result {
 	if workers < 1 {
 		workers = 1
 	}
@@ -88,7 +98,7 @@ func checkAll(hosts []string, workers int, timeout time.Duration) []Result {
 		go func() {
 			defer wg.Done()
 			for i := range jobs {
-				results[i] = check(hosts[i], timeout)
+				results[i] = checkWith(hosts[i], timeout, sni)
 			}
 		}()
 	}
