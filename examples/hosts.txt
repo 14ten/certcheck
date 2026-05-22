@@ -1,0 +1,8 @@
+# One host per line. Lines starting with # are ignored.
+# Default port is 443; specify host:port for anything else.
+
+github.com
+api.github.com
+cloudflare.com
+example.com
+1.1.1.1
