@@ -18,9 +18,10 @@ func main() {
 		timeout  = flag.Duration("timeout", defaultTimeout, "per-host TLS dial timeout")
 		port     = flag.Int("port", 443, "default TLS port when not specified per host")
 		sni      = flag.String("sni", "", "override SNI server name (default: host)")
-		insecure = flag.Bool("insecure", true, "skip cert chain verification (still reads expiry)")
-		subject  = flag.Bool("show-subject", false, "show certificate subject CN column")
-		verbose  = flag.Bool("v", false, "verbose: log each host as it's checked")
+		insecure  = flag.Bool("insecure", true, "skip cert chain verification (still reads expiry)")
+		showChain = flag.Bool("chain", false, "include full certificate chain in JSON output")
+		subject   = flag.Bool("show-subject", false, "show certificate subject CN column")
+		verbose   = flag.Bool("v", false, "verbose: log each host as it's checked")
 		noColor  = flag.Bool("no-color", false, "disable ANSI colors")
 		showVer  = flag.Bool("version", false, "print version and exit")
 	)
@@ -53,6 +54,7 @@ func main() {
 		Timeout:     *timeout,
 		SNI:         *sni,
 		Insecure:    *insecure,
+		ShowChain:   *showChain,
 		Verbose:     *verbose,
 		DefaultPort: *port,
 	})

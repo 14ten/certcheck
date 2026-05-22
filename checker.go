@@ -13,13 +13,20 @@ import (
 
 const defaultTimeout = 5 * time.Second
 
+type ChainCert struct {
+	Subject  string `json:"subject"`
+	Issuer   string `json:"issuer"`
+	NotAfter string `json:"not_after"`
+}
+
 type Result struct {
-	Host     string    `json:"host"`
-	NotAfter time.Time `json:"not_after,omitempty"`
-	DaysLeft int       `json:"days_left,omitempty"`
-	Issuer   string    `json:"issuer,omitempty"`
-	Subject  string    `json:"subject,omitempty"`
-	Error    string    `json:"error,omitempty"`
+	Host     string      `json:"host"`
+	NotAfter time.Time   `json:"not_after,omitempty"`
+	DaysLeft int         `json:"days_left,omitempty"`
+	Issuer   string      `json:"issuer,omitempty"`
+	Subject  string      `json:"subject,omitempty"`
+	Chain    []ChainCert `json:"chain,omitempty"`
+	Error    string      `json:"error,omitempty"`
 }
 
 func parseHost(h string, defaultPort int) string {
@@ -59,6 +66,7 @@ type Options struct {
 	Timeout     time.Duration
 	SNI         string
 	Insecure    bool
+	ShowChain   bool
 	Verbose     bool
 	DefaultPort int
 }
@@ -97,6 +105,15 @@ func checkWith(host string, opts Options) Result {
 	r.DaysLeft = int(time.Until(leaf.NotAfter).Hours() / 24)
 	r.Issuer = issuerCN(leaf)
 	r.Subject = leaf.Subject.CommonName
+	if opts.ShowChain {
+		for _, c := range certs {
+			r.Chain = append(r.Chain, ChainCert{
+				Subject:  c.Subject.CommonName,
+				Issuer:   issuerCN(c),
+				NotAfter: c.NotAfter.Format("2006-01-02"),
+			})
+		}
+	}
 	return r
 }
 
