@@ -39,6 +39,7 @@ func main() {
 	}
 
 	results := checkAll(hosts, *workers, *timeout)
+	sortByExpiry(results)
 	switch {
 	case *quiet:
 		// no output
