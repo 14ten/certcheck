@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -16,6 +17,7 @@ func main() {
 		timeout  = flag.Duration("timeout", defaultTimeout, "per-host TLS dial timeout")
 		sni      = flag.String("sni", "", "override SNI server name (default: host)")
 		insecure = flag.Bool("insecure", true, "skip cert chain verification (still reads expiry)")
+		verbose  = flag.Bool("v", false, "verbose: log each host as it's checked")
 		noColor  = flag.Bool("no-color", false, "disable ANSI colors")
 		showVer  = flag.Bool("version", false, "print version and exit")
 	)
@@ -39,11 +41,19 @@ func main() {
 		os.Exit(2)
 	}
 
+	if *verbose {
+		log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+		log.SetOutput(os.Stderr)
+		log.Printf("checking %d host(s) with %d worker(s), timeout=%s", len(hosts), *workers, *timeout)
+	}
 	results := checkAll(hosts, *workers, Options{
 		Timeout:  *timeout,
 		SNI:      *sni,
 		Insecure: *insecure,
 	})
+	if *verbose {
+		log.Printf("done, %d result(s)", len(results))
+	}
 	sortByExpiry(results)
 	switch {
 	case *quiet:
