@@ -10,8 +10,15 @@ Useful for daily cron jobs, monitoring pipelines, or a quick sanity check.
 ## Install
 
 ```sh
+# from source
 go install github.com/14ten/certcheck@latest
+
+# docker
+docker run --rm ghcr.io/14ten/certcheck:latest example.com
 ```
+
+Pre-built binaries (linux / macOS / windows on amd64 + arm64) are attached to
+each [release](https://github.com/14ten/certcheck/releases).
 
 ## Usage
 
